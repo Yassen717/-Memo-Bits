@@ -1,50 +1,73 @@
-# Welcome to your Expo app 👋
+# 🧠 Memo Bits
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A simple card-flip memory game built with React Native and Expo. Find all matching pairs with a clean, retro-pixel aesthetic using emojis.
 
-## Get started
+## 🎮 How to Play
 
-1. Install dependencies
+1. Tap any card to flip it and reveal the emoji
+2. Tap a second card to find its match
+3. If the cards match, they stay revealed
+4. If they don't match, they flip back after 1 second
+5. Find all 8 pairs to win!
+6. Try to complete the game in as few moves as possible
 
-   ```bash
-   npm install
-   ```
+## 🚀 Features (V1.0)
 
-2. Start the app
+- 4x4 grid with 8 pairs of emoji cards
+- Move counter to track your progress
+- Win screen with move count
+- New Game button to restart anytime
+- Smooth card flip animations
+- Dark retro-pixel aesthetic
+- No ads, no timers - just pure gameplay
 
-   ```bash
-   npx expo start
-   ```
+## 🛠️ Tech Stack
 
-In the output, you'll find options to open the app in a
+- React Native
+- Expo
+- TypeScript
+- Fisher-Yates shuffle algorithm
+- React Hooks for state management
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## 📦 Installation
 
 ```bash
-npm run reset-project
+# Install dependencies
+npm install
+
+# Start the development server
+npm start
+
+# Run on iOS
+npm run ios
+
+# Run on Android
+npm run android
+
+# Run on web
+npm run web
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## 🎯 Roadmap
 
-## Learn more
+### V1.1 - Enhanced Gameplay
+- Add timer/countdown
+- Track best score (moves + time)
+- Persist high score locally
+- Add difficulty selector
 
-To learn more about developing your project with Expo, look at the following resources:
+### V1.2 - Multiple Difficulty Levels
+- Easy: 3x4 grid (6 pairs)
+- Medium: 4x4 grid (8 pairs) - current
+- Hard: 5x4 grid (10 pairs)
+- Settings screen for preferences
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### V1.3 - Themes & Customization
+- Multiple emoji themes (animals, food, sports)
+- Color scheme options
+- Card back designs
+- Sound effects toggle
 
-## Join the community
+## 📝 License
 
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+MIT
