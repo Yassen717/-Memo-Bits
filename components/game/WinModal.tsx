@@ -1,5 +1,6 @@
-import React from 'react';
-import { Modal, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { Modal, View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import * as Haptics from 'expo-haptics';
 
 interface WinModalProps {
   visible: boolean;
@@ -8,27 +9,65 @@ interface WinModalProps {
 }
 
 export default function WinModal({ visible, moves, onPlayAgain }: WinModalProps) {
+  const scaleAnim = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (visible) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      
+      Animated.parallel([
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          useNativeDriver: true,
+          tension: 50,
+          friction: 7,
+        }),
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      scaleAnim.setValue(0);
+      fadeAnim.setValue(0);
+    }
+  }, [visible]);
+
+  const handlePlayAgain = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    onPlayAgain();
+  };
+
   return (
     <Modal
       visible={visible}
       transparent
-      animationType="fade"
+      animationType="none"
     >
-      <View style={styles.overlay}>
-        <View style={styles.modal}>
+      <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
+        <Animated.View
+          style={[
+            styles.modal,
+            {
+              transform: [{ scale: scaleAnim }],
+            },
+          ]}
+        >
           <Text style={styles.title}>🎉 You Won! 🎉</Text>
           <Text style={styles.moves}>
             Completed in {moves} moves
           </Text>
           <TouchableOpacity
             style={styles.button}
-            onPress={onPlayAgain}
+            onPress={handlePlayAgain}
             activeOpacity={0.8}
           >
             <Text style={styles.buttonText}>Play Again</Text>
           </TouchableOpacity>
-        </View>
-      </View>
+        </Animated.View>
+      </Animated.View>
     </Modal>
   );
 }

@@ -1,5 +1,6 @@
-import React from 'react';
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { TouchableOpacity, Text, StyleSheet, Animated } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { Card as CardType } from '@/types/game';
 
 interface CardProps {
@@ -10,21 +11,105 @@ interface CardProps {
 
 export default function Card({ card, onPress, disabled }: CardProps) {
   const showFace = card.isFlipped || card.isMatched;
+  const flipAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const matchAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.spring(flipAnim, {
+      toValue: showFace ? 1 : 0,
+      useNativeDriver: true,
+      tension: 50,
+      friction: 7,
+    }).start();
+  }, [showFace]);
+
+  useEffect(() => {
+    if (card.isMatched) {
+      Animated.sequence([
+        Animated.spring(matchAnim, {
+          toValue: 1.2,
+          useNativeDriver: true,
+          tension: 100,
+          friction: 3,
+        }),
+        Animated.spring(matchAnim, {
+          toValue: 1,
+          useNativeDriver: true,
+          tension: 50,
+          friction: 5,
+        }),
+      ]).start();
+    }
+  }, [card.isMatched]);
+
+  const handlePress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
+    Animated.sequence([
+      Animated.timing(scaleAnim, {
+        toValue: 0.9,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+        tension: 100,
+        friction: 3,
+      }),
+    ]).start();
+
+    onPress(card.id);
+  };
+
+  const rotateY = flipAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '180deg'],
+  });
+
+  const frontOpacity = flipAnim.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [0, 0, 1],
+  });
+
+  const backOpacity = flipAnim.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [1, 0, 0],
+  });
 
   return (
     <TouchableOpacity
-      style={[
-        styles.card,
-        showFace && styles.cardFlipped,
-        card.isMatched && styles.cardMatched,
-      ]}
-      onPress={() => onPress(card.id)}
+      onPress={handlePress}
       disabled={disabled || card.isMatched}
-      activeOpacity={0.7}
+      activeOpacity={1}
     >
-      <Text style={styles.emoji}>
-        {showFace ? card.emoji : '?'}
-      </Text>
+      <Animated.View
+        style={[
+          styles.card,
+          {
+            transform: [
+              { rotateY },
+              { scale: Animated.multiply(scaleAnim, matchAnim) },
+            ],
+          },
+        ]}
+      >
+        <Animated.View style={[styles.cardFace, styles.cardBack, { opacity: backOpacity }]}>
+          <Text style={styles.questionMark}>?</Text>
+        </Animated.View>
+        
+        <Animated.View
+          style={[
+            styles.cardFace,
+            styles.cardFront,
+            card.isMatched && styles.cardMatched,
+            { opacity: frontOpacity },
+          ]}
+        >
+          <Text style={styles.emoji}>{card.emoji}</Text>
+        </Animated.View>
+      </Animated.View>
     </TouchableOpacity>
   );
 }
@@ -34,14 +119,23 @@ const styles = StyleSheet.create({
     width: 70,
     height: 70,
     margin: 4,
+    position: 'relative',
+  },
+  cardFace: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
     borderRadius: 8,
-    backgroundColor: '#2a2a2a',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
+    backfaceVisibility: 'hidden',
+  },
+  cardBack: {
+    backgroundColor: '#2a2a2a',
     borderColor: '#444',
   },
-  cardFlipped: {
+  cardFront: {
     backgroundColor: '#3a3a3a',
     borderColor: '#666',
   },
@@ -51,5 +145,10 @@ const styles = StyleSheet.create({
   },
   emoji: {
     fontSize: 32,
+  },
+  questionMark: {
+    fontSize: 32,
+    color: '#666',
+    fontWeight: 'bold',
   },
 });

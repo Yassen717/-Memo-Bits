@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import * as Haptics from 'expo-haptics';
 import { Card, GameState } from '@/types/game';
 
 const EMOJIS = ['🎮', '🚀', '💾', '🐛', '🎯', '🎨', '🎵', '🔥'];
@@ -59,6 +60,8 @@ export default function useGameLogic() {
 
       if (firstCard && secondCard && firstCard.emoji === secondCard.emoji) {
         // Match found
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        
         const newCards = gameState.cards.map(c =>
           c.id === firstId || c.id === secondId
             ? { ...c, isMatched: true }
@@ -81,6 +84,8 @@ export default function useGameLogic() {
         }
       } else {
         // No match - flip back after delay
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        
         setTimeout(() => {
           const newCards = gameState.cards.map(c =>
             c.id === firstId || c.id === secondId

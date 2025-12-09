@@ -1,36 +1,72 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Animated } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import GameBoard from '@/components/game/GameBoard';
 import WinModal from '@/components/game/WinModal';
 import useGameLogic from '@/hooks/useGameLogic';
 
 export default function GameScreen() {
   const { cards, moves, isWon, isChecking, handleCardPress, resetGame } = useGameLogic();
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(-20)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+        tension: 50,
+        friction: 8,
+      }),
+    ]).start();
+  }, []);
+
+  const handleNewGame = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    resetGame();
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.header}>
+      <Animated.View
+        style={[
+          styles.header,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }],
+          },
+        ]}
+      >
         <Text style={styles.title}>🧠 Memo Bits</Text>
         <Text style={styles.subtitle}>Find all matching pairs!</Text>
-      </View>
+      </Animated.View>
 
-      <View style={styles.stats}>
+      <Animated.View style={[styles.stats, { opacity: fadeAnim }]}>
         <Text style={styles.movesText}>Moves: {moves}</Text>
-      </View>
+      </Animated.View>
 
-      <GameBoard
-        cards={cards}
-        onCardPress={handleCardPress}
-        disabled={isChecking}
-      />
+      <Animated.View style={{ opacity: fadeAnim }}>
+        <GameBoard
+          cards={cards}
+          onCardPress={handleCardPress}
+          disabled={isChecking}
+        />
+      </Animated.View>
 
-      <TouchableOpacity
-        style={styles.newGameButton}
-        onPress={resetGame}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.newGameText}>New Game</Text>
-      </TouchableOpacity>
+      <Animated.View style={{ opacity: fadeAnim }}>
+        <TouchableOpacity
+          style={styles.newGameButton}
+          onPress={handleNewGame}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.newGameText}>New Game</Text>
+        </TouchableOpacity>
+      </Animated.View>
 
       <WinModal
         visible={isWon}
