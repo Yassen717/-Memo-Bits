@@ -41,7 +41,7 @@ export default function Card({ card, onPress, disabled }: CardProps) {
         }),
       ]).start();
     }
-  }, [card.isMatched]);
+  }, [card.isMatched, matchAnim]);
 
   const handlePress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

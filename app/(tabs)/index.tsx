@@ -24,7 +24,7 @@ export default function GameScreen() {
         friction: 8,
       }),
     ]).start();
-  }, []);
+  }, [fadeAnim, slideAnim]);
 
   const handleNewGame = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);

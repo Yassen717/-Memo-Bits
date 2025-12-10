@@ -33,7 +33,7 @@ export default function WinModal({ visible, moves, onPlayAgain }: WinModalProps)
       scaleAnim.setValue(0);
       fadeAnim.setValue(0);
     }
-  }, [visible]);
+  }, [fadeAnim, scaleAnim, visible]);
 
   const handlePlayAgain = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
