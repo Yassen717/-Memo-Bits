@@ -7,7 +7,7 @@ import WinModal from '@/components/game/WinModal';
 import useGameLogic from '@/hooks/useGameLogic';
 
 export default function GameScreen() {
-  const { cards, moves, isWon, isChecking, handleCardPress, resetGame } = useGameLogic();
+  const { cards, moves, isWon, isChecking, bestScore, isNewRecord, handleCardPress, resetGame } = useGameLogic();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(-20)).current;
 
@@ -56,6 +56,12 @@ export default function GameScreen() {
             <Text style={styles.movesLabel}>Moves</Text>
             <Text style={styles.movesText}>{moves}</Text>
           </View>
+          {bestScore !== null && (
+            <View style={styles.statsCard}>
+              <Text style={styles.movesLabel}>Best</Text>
+              <Text style={styles.bestScoreText}>⭐ {bestScore}</Text>
+            </View>
+          )}
         </Animated.View>
 
         <Animated.View style={{ opacity: fadeAnim }}>
@@ -84,6 +90,8 @@ export default function GameScreen() {
         <WinModal
           visible={isWon}
           moves={moves}
+          bestScore={bestScore}
+          isNewRecord={isNewRecord}
           onPlayAgain={resetGame}
         />
       </ScrollView>
@@ -121,6 +129,8 @@ const styles = StyleSheet.create({
   },
   stats: {
     marginBottom: 16,
+    flexDirection: 'row',
+    gap: 12,
   },
   statsCard: {
     backgroundColor: 'rgba(42, 42, 42, 0.6)',
@@ -131,6 +141,11 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(45, 134, 89, 0.3)',
     alignItems: 'center',
     minWidth: 120,
+  },
+  bestScoreText: {
+    fontSize: 32,
+    color: '#ffd700',
+    fontWeight: 'bold',
   },
   movesLabel: {
     fontSize: 14,

@@ -5,12 +5,15 @@ import * as Haptics from 'expo-haptics';
 interface WinModalProps {
   visible: boolean;
   moves: number;
+  bestScore: number | null;
+  isNewRecord: boolean;
   onPlayAgain: () => void;
 }
 
-export default function WinModal({ visible, moves, onPlayAgain }: WinModalProps) {
+export default function WinModal({ visible, moves, bestScore, isNewRecord, onPlayAgain }: WinModalProps) {
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const recordAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (visible) {
@@ -28,12 +31,31 @@ export default function WinModal({ visible, moves, onPlayAgain }: WinModalProps)
           duration: 300,
           useNativeDriver: true,
         }),
-      ]).start();
+      ]).start(() => {
+        // Animate record badge if new record
+        if (isNewRecord) {
+          Animated.sequence([
+            Animated.spring(recordAnim, {
+              toValue: 1.2,
+              useNativeDriver: true,
+              tension: 100,
+              friction: 3,
+            }),
+            Animated.spring(recordAnim, {
+              toValue: 1,
+              useNativeDriver: true,
+              tension: 50,
+              friction: 5,
+            }),
+          ]).start();
+        }
+      });
     } else {
       scaleAnim.setValue(0);
       fadeAnim.setValue(0);
+      recordAnim.setValue(0);
     }
-  }, [fadeAnim, scaleAnim, visible]);
+  }, [fadeAnim, scaleAnim, recordAnim, visible, isNewRecord]);
 
   const handlePlayAgain = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -56,9 +78,30 @@ export default function WinModal({ visible, moves, onPlayAgain }: WinModalProps)
           ]}
         >
           <Text style={styles.title}>🎉 You Won! 🎉</Text>
+          
+          {isNewRecord && (
+            <Animated.View
+              style={[
+                styles.recordBadge,
+                {
+                  transform: [{ scale: recordAnim }],
+                },
+              ]}
+            >
+              <Text style={styles.recordText}>🏆 NEW RECORD! 🏆</Text>
+            </Animated.View>
+          )}
+          
           <Text style={styles.moves}>
             Completed in {moves} moves
           </Text>
+          
+          {bestScore !== null && !isNewRecord && (
+            <Text style={styles.bestScore}>
+              Best: ⭐ {bestScore} moves
+            </Text>
+          )}
+          
           <TouchableOpacity
             style={styles.button}
             onPress={handlePlayAgain}
@@ -94,10 +137,31 @@ const styles = StyleSheet.create({
     color: '#fff',
     marginBottom: 16,
   },
+  recordBadge: {
+    backgroundColor: 'rgba(255, 215, 0, 0.2)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: '#ffd700',
+    marginBottom: 16,
+  },
+  recordText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#ffd700',
+    letterSpacing: 1,
+  },
   moves: {
     fontSize: 18,
     color: '#aaa',
+    marginBottom: 8,
+  },
+  bestScore: {
+    fontSize: 16,
+    color: '#ffd700',
     marginBottom: 24,
+    fontWeight: '600',
   },
   button: {
     backgroundColor: '#2d8659',
