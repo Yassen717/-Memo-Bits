@@ -142,6 +142,7 @@ export default function useGameLogic() {
         }, 1000);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameState.selectedCards.length]);
 
   function resetGame() {

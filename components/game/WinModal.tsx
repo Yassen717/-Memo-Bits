@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Modal, View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import { Modal, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
 import * as Haptics from 'expo-haptics';
 
 interface WinModalProps {
