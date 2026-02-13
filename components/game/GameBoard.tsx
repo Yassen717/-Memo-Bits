@@ -1,8 +1,8 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import Card from './Card';
 import { Card as CardType } from '@/types/game';
+import { LinearGradient } from 'expo-linear-gradient';
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import Card from './Card';
 
 interface GameBoardProps {
   cards: CardType[];
@@ -52,7 +52,8 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'center',
     alignItems: 'center',
-    width: 320,
+    width: '100%',
+    maxWidth: 360,
     padding: 12,
   },
 });
