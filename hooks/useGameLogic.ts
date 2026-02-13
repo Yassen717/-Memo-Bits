@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { Card, GameState } from '@/types/game';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
-import { Card, GameState } from '@/types/game';
+import { useEffect, useRef, useState } from 'react';
 
 const EMOJIS = ['🎮', '🚀', '💾', '🐛', '🎯', '🎨', '🎵', '🔥'];
 const BEST_SCORE_KEY = '@memo_bits_best_score';
@@ -10,6 +10,8 @@ export default function useGameLogic() {
   const [gameState, setGameState] = useState<GameState>(initializeGame());
   const [bestScore, setBestScore] = useState<number | null>(null);
   const [isNewRecord, setIsNewRecord] = useState(false);
+  const checkTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const winTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load best score on mount
   useEffect(() => {
@@ -62,90 +64,119 @@ export default function useGameLogic() {
   }
 
   function handleCardPress(id: number) {
-    if (gameState.isChecking || gameState.selectedCards.length >= 2) return;
+    setGameState(prev => {
+      if (prev.isChecking || prev.selectedCards.length >= 2) return prev;
 
-    const card = gameState.cards.find(c => c.id === id);
-    if (!card || card.isFlipped || card.isMatched) return;
+      const card = prev.cards.find(c => c.id === id);
+      if (!card || card.isFlipped || card.isMatched) return prev;
 
-    const newSelectedCards = [...gameState.selectedCards, id];
-    const newCards = gameState.cards.map(c =>
-      c.id === id ? { ...c, isFlipped: true } : c
-    );
+      const newSelectedCards = [...prev.selectedCards, id];
+      const newCards = prev.cards.map(c =>
+        c.id === id ? { ...c, isFlipped: true } : c
+      );
 
-    setGameState({
-      ...gameState,
-      cards: newCards,
-      selectedCards: newSelectedCards,
+      return {
+        ...prev,
+        cards: newCards,
+        selectedCards: newSelectedCards,
+      };
     });
   }
 
   useEffect(() => {
-    if (gameState.selectedCards.length === 2) {
-      setGameState(prev => ({ ...prev, isChecking: true }));
+    if (gameState.selectedCards.length !== 2 || gameState.isChecking) return;
 
-      const [firstId, secondId] = gameState.selectedCards;
-      const firstCard = gameState.cards.find(c => c.id === firstId);
-      const secondCard = gameState.cards.find(c => c.id === secondId);
+    setGameState(prev => ({ ...prev, isChecking: true }));
 
-      if (firstCard && secondCard && firstCard.emoji === secondCard.emoji) {
-        // Match found
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        
-        const newCards = gameState.cards.map(c =>
+    const [firstId, secondId] = gameState.selectedCards;
+    const firstCard = gameState.cards.find(c => c.id === firstId);
+    const secondCard = gameState.cards.find(c => c.id === secondId);
+
+    if (firstCard && secondCard && firstCard.emoji === secondCard.emoji) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+      const newCards = gameState.cards.map(c =>
+        c.id === firstId || c.id === secondId
+          ? { ...c, isMatched: true }
+          : c
+      );
+
+      const finalMoves = gameState.moves + 1;
+
+      setGameState(prev => ({
+        ...prev,
+        cards: newCards,
+        moves: prev.moves + 1,
+        selectedCards: [],
+        isChecking: false,
+      }));
+
+      if (newCards.every(c => c.isMatched)) {
+        if (bestScore === null || finalMoves < bestScore) {
+          setIsNewRecord(true);
+          saveBestScore(finalMoves);
+        } else {
+          setIsNewRecord(false);
+        }
+
+        if (winTimeoutRef.current) {
+          clearTimeout(winTimeoutRef.current);
+        }
+
+        winTimeoutRef.current = setTimeout(() => {
+          setGameState(prev => ({ ...prev, isWon: true }));
+        }, 500);
+      }
+
+      return;
+    }
+
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+
+    if (checkTimeoutRef.current) {
+      clearTimeout(checkTimeoutRef.current);
+    }
+
+    checkTimeoutRef.current = setTimeout(() => {
+      setGameState(prev => {
+        const newCards = prev.cards.map(c =>
           c.id === firstId || c.id === secondId
-            ? { ...c, isMatched: true }
+            ? { ...c, isFlipped: false }
             : c
         );
 
-        setGameState(prev => ({
+        return {
           ...prev,
           cards: newCards,
           moves: prev.moves + 1,
           selectedCards: [],
           isChecking: false,
-        }));
+        };
+      });
+    }, 1000);
+  }, [bestScore, gameState.cards, gameState.isChecking, gameState.moves, gameState.selectedCards]);
 
-        // Check win condition
-        if (newCards.every(c => c.isMatched)) {
-          const finalMoves = gameState.moves + 1;
-          
-          // Check if new record
-          if (bestScore === null || finalMoves < bestScore) {
-            setIsNewRecord(true);
-            saveBestScore(finalMoves);
-          } else {
-            setIsNewRecord(false);
-          }
-          
-          setTimeout(() => {
-            setGameState(prev => ({ ...prev, isWon: true }));
-          }, 500);
-        }
-      } else {
-        // No match - flip back after delay
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        
-        setTimeout(() => {
-          const newCards = gameState.cards.map(c =>
-            c.id === firstId || c.id === secondId
-              ? { ...c, isFlipped: false }
-              : c
-          );
-
-          setGameState(prev => ({
-            ...prev,
-            cards: newCards,
-            moves: prev.moves + 1,
-            selectedCards: [],
-            isChecking: false,
-          }));
-        }, 1000);
+  useEffect(() => {
+    return () => {
+      if (checkTimeoutRef.current) {
+        clearTimeout(checkTimeoutRef.current);
       }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameState.selectedCards.length]);
+
+      if (winTimeoutRef.current) {
+        clearTimeout(winTimeoutRef.current);
+      }
+    };
+  }, []);
 
   function resetGame() {
+    if (checkTimeoutRef.current) {
+      clearTimeout(checkTimeoutRef.current);
+    }
+
+    if (winTimeoutRef.current) {
+      clearTimeout(winTimeoutRef.current);
+    }
+
     setGameState(initializeGame());
     setIsNewRecord(false);
   }
