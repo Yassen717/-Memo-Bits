@@ -1,8 +1,6 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-
-const { width, height } = Dimensions.get('window');
+import React, { useEffect, useRef } from 'react';
+import { Animated, StyleSheet, Text, View } from 'react-native';
 
 interface SplashScreenProps {
   onFinish: () => void;
@@ -80,7 +78,11 @@ export default function SplashScreen({ onFinish }: SplashScreenProps) {
     sequence.start(() => {
       onFinish();
     });
-  }, []);
+
+    return () => {
+      sequence.stop();
+    };
+  }, [card1Anim, card2Anim, card3Anim, card4Anim, fadeAnim, onFinish, rotateAnim, scaleAnim]);
 
   const rotate = rotateAnim.interpolate({
     inputRange: [0, 1],

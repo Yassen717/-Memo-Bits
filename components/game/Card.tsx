@@ -1,7 +1,7 @@
-import React, { useEffect, useRef } from 'react';
-import { TouchableOpacity, Text, StyleSheet, Animated } from 'react-native';
-import * as Haptics from 'expo-haptics';
 import { Card as CardType } from '@/types/game';
+import * as Haptics from 'expo-haptics';
+import React, { useEffect, useRef } from 'react';
+import { Animated, StyleSheet, Text, TouchableOpacity } from 'react-native';
 
 interface CardProps {
   card: CardType;
@@ -22,7 +22,7 @@ export default function Card({ card, onPress, disabled }: CardProps) {
       tension: 50,
       friction: 7,
     }).start();
-  }, [showFace]);
+  }, [flipAnim, showFace]);
 
   useEffect(() => {
     if (card.isMatched) {
